@@ -321,14 +321,20 @@ public final class Compat {
 
     /**
      * Rebind MC's main render target (swapchain) so the composite can draw into it.
-     * On VM 0.6.1, DefaultMainPass.rebindMainTarget() handles state internally.
+     * On VM 0.6.1+, the active MainPass.rebindMainTarget() handles state internally.
+     * The active pass is not always DefaultMainPass: Beryl replaces it with its own
+     * ShaderMainPass, so this path goes through the MainPass interface.
      * On VM 0.4.2, it calls swapChain.beginRenderPass() directly without updating
      * Renderer state — we must fix up boundFramebuffer/boundRenderPass afterward.
      */
     public static void rebindMainTarget() {
+        #if MC_VER >= MC_1_21_1
+        Renderer.getInstance().getMainPass().rebindMainTarget();
+        #else
         net.vulkanmod.vulkan.pass.DefaultMainPass mainPass =
                 (net.vulkanmod.vulkan.pass.DefaultMainPass) Renderer.getInstance().getMainPass();
         mainPass.rebindMainTarget();
+        #endif
 
         #if MC_VER < MC_1_21_1
         // VM 0.4.2: rebindMainTarget starts auxRenderPass on swapChain but doesn't
