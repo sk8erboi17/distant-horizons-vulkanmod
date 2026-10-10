@@ -137,11 +137,6 @@ public class DhCompositePipeline {
         String vertSource = readShaderResource("shaders/vulkan/dh_apply.vert");
         String fragSource = readShaderResource("shaders/vulkan/dh_apply.frag");
 
-        // Beryl's main target holds linear colour; see BERYL_COMPAT in dh_apply.frag.
-        if (com.braffolk.dhvulkan.compat.Compat.isBerylActive()) {
-            fragSource = fragSource.replaceFirst("(#version 450)", "$1\n#define BERYL_COMPAT");
-        }
-
         Pipeline.Builder builder = new Pipeline.Builder(QUAD_FORMAT);
         builder.compileShaders("dh_composite", vertSource, fragSource);
 
