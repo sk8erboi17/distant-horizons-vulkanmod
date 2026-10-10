@@ -109,6 +109,12 @@ void main() {
     if (uDebugMode == 0) {
         // Normal rendering — apply distance fade for MC/DH transition
         fragColor = texture(gDhColorTexture, TexCoord);
+#if defined(BERYL_COMPAT)
+        // DH colours are display (sRGB) values, but Beryl's main target is linear and
+        // Beryl's final pass gamma-encodes it again: without decoding here the LODs
+        // come out washed out and far brighter than the vanilla terrain.
+        fragColor.rgb = pow(max(fragColor.rgb, vec3(0.0)), vec3(2.2));
+#endif
         fragColor *= fadeMultiplier;  // premultiplied alpha: scale RGB+A together
     }
     else if (uDebugMode == 1) {
