@@ -320,6 +320,14 @@ public class VulkanRenderEngine implements VulkanBackend {
         int vpHeight = Minecraft.getInstance().getWindow().getHeight();
         this.renderContext.setUniformFloat("uClipDistance",
                 DhConfigHelper.getShaderClipDistance(renderDistChunks, vpWidth, vpHeight));
+
+        // Beryl fades vanilla terrain into fog at the vanilla render distance, which
+        // paints a white band over the near chunks while the LODs continue behind it.
+        // Stretch Beryl's fog uniforms to the LOD draw distance instead.
+        if (com.braffolk.dhvulkan.compat.Compat.isBerylActive()) {
+            int lodDrawDistance = (DhConfigHelper.lodChunkRenderDistanceRadius() + 2) * 16;
+            com.braffolk.dhvulkan.compat.beryl.BerylAtmosphereOverride.applyDhDistanceOverrides((float) lodDrawDistance);
+        }
         this.renderContext.setUniformBool("uDitherDhRendering", DhConfigHelper.ditherDhFade());
 
         boolean noiseEnabled = DhConfigHelper.noiseEnabled();

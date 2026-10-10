@@ -90,6 +90,17 @@ public final class Compat {
     }
 
     // ========================= //
+    // Beryl detection           //
+    // ========================= //
+
+    private static final boolean BERYL_ACTIVE = net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("beryl");
+
+    /** @return true if the Beryl shader mod is loaded alongside VulkanMod */
+    public static boolean isBerylActive() {
+        return BERYL_ACTIVE;
+    }
+
+    // ========================= //
     // Deferred composite hook   //
     // ========================= //
 
