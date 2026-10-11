@@ -32,6 +32,10 @@ public class DhVulkanModEntrypoint implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        if (DhVulkanMixinPlugin.isDhNativeRenderingPresent()) {
+            LOGGER.info("[DH-VulkanMod] DH renders on Vulkan by itself (Blaze3D); extension inactive.");
+            return;
+        }
         LOGGER.info("[DH-VulkanMod] Extension mod initializing...");
 
         DhVulkanConfig config = DhVulkanConfig.get();

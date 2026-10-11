@@ -150,6 +150,12 @@ public class DhVulkanMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        // DH 3.1+ renders through Blaze3D, which VulkanMod backs with Vulkan:
+        // the extension must stay out of the way entirely.
+        if (isDhNativeRenderingPresent()) {
+            return false;
+        }
+
         // Lazily detect DH version
         if (isDh3Present == null) {
             try {
@@ -183,6 +189,27 @@ public class DhVulkanMixinPlugin implements IMixinConfigPlugin {
     }
 
     private static Boolean isDh3Present = null;
+    private static Boolean dhNativeRendering = null;
+
+    /**
+     * @return true when the installed DH can render LODs on Vulkan by itself
+     *         (DH 3.1+ ships a Blaze3D engine, set renderingEngine = BLAZE_3D).
+     *         DH 3.1 is also where Mat4f became DhMat4f, so that class marks it
+     *         without initializing anything.
+     */
+    public static boolean isDhNativeRenderingPresent() {
+        if (dhNativeRendering == null) {
+            try {
+                Class.forName("com.seibel.distanthorizons.core.util.math.DhMat4f", false,
+                        DhVulkanMixinPlugin.class.getClassLoader());
+                dhNativeRendering = true;
+                System.out.println("[DH-VulkanMod] DH 3.1+ detected: it renders on Vulkan via Blaze3D, extension disabled.");
+            } catch (ClassNotFoundException e) {
+                dhNativeRendering = false;
+            }
+        }
+        return dhNativeRendering;
+    }
 
     @Override
     public void acceptTargets(Set<String> myTargets, Set<String> otherTargets) {
