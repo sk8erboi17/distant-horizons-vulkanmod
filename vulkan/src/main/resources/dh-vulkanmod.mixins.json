@@ -13,6 +13,7 @@
         "dh24.MixinMinecraftRenderWrapper",
         "dh3.MixinDependencySetup",
         "dh33.MixinVkGpuDeviceShaderSource",
+        "dh33.MixinGraphicsPipelineAttributes",
         "shared.MixinLevelRenderer",
         "shared.MixinLightMapWrapper",
         "beryl.MixinBerylRenderingPipeline"
