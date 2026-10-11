@@ -150,9 +150,12 @@ public class DhVulkanMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        // DH 3.1+ renders through Blaze3D, which VulkanMod backs with Vulkan:
-        // the extension must stay out of the way entirely.
+        // DH 3.1+ renders through Blaze3D, which VulkanMod backs with Vulkan: the
+        // extension stays out of the way except for the dh33 shader-source fixes.
         if (isDhNativeRenderingPresent()) {
+            return mixinClassName.contains(".dh33.");
+        }
+        if (mixinClassName.contains(".dh33.")) {
             return false;
         }
 
