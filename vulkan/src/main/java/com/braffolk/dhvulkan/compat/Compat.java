@@ -84,6 +84,70 @@ public final class Compat {
         return BERYL_ACTIVE;
     }
 
+    // ========================= //
+    // Loaded vanilla radius     //
+    // ========================= //
+
+    private static long loadedRadiusTick = Long.MIN_VALUE;
+    private static int loadedRadiusRequested = -1;
+    private static int loadedRadiusResult = -1;
+
+    /**
+     * Returns the vanilla render distance DH may treat as "covered by vanilla
+     * chunks": the requested distance, shrunk to the largest circle of chunks
+     * around the player that the client actually holds.
+     *
+     * DH skips every LOD nearer than a fraction of the render distance because it
+     * assumes vanilla terrain is drawn there. On a server that sends fewer chunks
+     * than the client asks for, or while chunks are still streaming in during fast
+     * flight, that assumption leaves holes where neither vanilla nor DH draws
+     * anything (on void maps the sky shows through). Measuring the loaded area
+     * keeps LODs wherever vanilla chunks are missing.
+     *
+     * Render thread only. The scan is (2r+1)^2 chunk lookups, cached per game tick.
+     *
+     * @param requestedChunks render distance DH would otherwise use, in chunks
+     * @return a value in [2, requestedChunks], or requestedChunks when no level
+     *         or player is available
+     */
+    public static int loadedRenderDistance(int requestedChunks) {
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+        net.minecraft.client.multiplayer.ClientLevel level = mc.level;
+        if (level == null || mc.player == null || requestedChunks <= 2) {
+            return requestedChunks;
+        }
+
+        long tick = level.getGameTime();
+        if (tick == loadedRadiusTick && requestedChunks == loadedRadiusRequested) {
+            return loadedRadiusResult;
+        }
+
+        net.minecraft.world.level.ChunkPos center = mc.player.chunkPosition();
+        net.minecraft.client.multiplayer.ClientChunkCache chunks = level.getChunkSource();
+        int maxSq = requestedChunks * requestedChunks;
+        int nearestMissingSq = Integer.MAX_VALUE;
+        for (int dx = -requestedChunks; dx <= requestedChunks; dx++) {
+            for (int dz = -requestedChunks; dz <= requestedChunks; dz++) {
+                int distSq = dx * dx + dz * dz;
+                if (distSq > maxSq || distSq >= nearestMissingSq) {
+                    continue;
+                }
+                if (!chunks.hasChunk(center.x + dx, center.z + dz)) {
+                    nearestMissingSq = distSq;
+                }
+            }
+        }
+
+        // The full circle strictly inside the nearest missing chunk is covered.
+        int radius = nearestMissingSq == Integer.MAX_VALUE
+                ? requestedChunks
+                : (int) Math.floor(Math.sqrt(nearestMissingSq)) - 1;
+        loadedRadiusResult = Math.max(2, Math.min(requestedChunks, radius));
+        loadedRadiusRequested = requestedChunks;
+        loadedRadiusTick = tick;
+        return loadedRadiusResult;
+    }
+
     private static boolean berylRegistered = false;
 
     /**

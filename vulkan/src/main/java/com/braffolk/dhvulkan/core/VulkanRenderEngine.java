@@ -353,7 +353,10 @@ public class VulkanRenderEngine implements VulkanBackend {
         this.renderContext.setUniformFloat("uEarthRadius",
                 (curveRatio < -1.0f || curveRatio > 1.0f) ? 6371000.0f / curveRatio : 0.0f);
 
-        int renderDistChunks = Minecraft.getInstance().options.getEffectiveRenderDistance();
+        // Same radius DH's MinecraftRenderWrapper reports (see MixinMinecraftRenderWrapper),
+        // so the shader discard circle never cuts LODs where vanilla chunks are missing.
+        int renderDistChunks = Compat.loadedRenderDistance(
+                Minecraft.getInstance().options.getEffectiveRenderDistance());
         int vpWidth = Minecraft.getInstance().getWindow().getWidth();
         int vpHeight = Minecraft.getInstance().getWindow().getHeight();
         float clipDistance = DhConfigHelper.getShaderClipDistance(renderDistChunks, vpWidth, vpHeight);
